@@ -6,18 +6,44 @@ import (
 	"log"
 
 	"github.com/teethew/protobuf/src/simple"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 func main() {
-	
+
 	sm := doSimple()
 	writeToFile("simple.bin", sm)
 
 	sm2 := &simplepb.SimpleMessage{}
 	readFromFile("simple.bin", sm2)
 
-	fmt.Println(sm2)
+	fmt.Println("Read data:", sm2)
+
+	sm2AsString := toJSON(sm2)
+
+	fmt.Println(sm2AsString)
+}
+
+func toJSON(pb proto.Message) string {
+	marshaler := protojson.MarshalOptions{
+		Multiline:         false,
+		Indent:            "",
+		AllowPartial:      false,
+		UseProtoNames:     true,
+		UseEnumNumbers:    false,
+		EmitUnpopulated:   false,
+		Resolver:          nil,
+	}
+
+	out, err := marshaler.Marshal(pb)
+
+	if err != nil {
+		log.Fatalln("An error ocurred when marshaling the message", err)
+		return ""
+	}
+
+	return string(out) 
 }
 
 func writeToFile(fname string, pb proto.Message) error {
@@ -44,12 +70,10 @@ func readFromFile(fname string, pb proto.Message) error {
 		return err
 	}
 
-	
 	if err := proto.Unmarshal(in, pb); err != nil {
 		log.Fatalln("Can't desserialize to string", err)
 		return err
 	}
-
 
 	fmt.Printf("Data has been read from the file %s!\n", fname)
 	return nil
@@ -57,13 +81,13 @@ func readFromFile(fname string, pb proto.Message) error {
 
 func doSimple() *simplepb.SimpleMessage {
 	sm := simplepb.SimpleMessage{
-		Id: 1,
-		IsSimple: true,
-		Name: "Message created successfully",
-		SampleList: []int32 {7, 0, 0, 4},
+		Id:         1,
+		IsSimple:   true,
+		Name:       "Message created successfully",
+		SampleList: []int32{7, 0, 0, 4},
 	}
 
-	fmt.Println(sm.String())
+	fmt.Println("Created message:", sm.String())
 
 	sm.Name = "The protocol buffers methods are working fine"
 
